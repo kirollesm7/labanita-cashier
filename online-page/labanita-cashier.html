@@ -1,0 +1,899 @@
+<title>LABANITA Cantine Register</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a till — menu grid on the left, live ticket pinned on the right; stacks on phones with a ticket bar. */
+:root {
+  --bg: #f5f7f0;          /* labneh white, slight olive bias */
+  --surface: #ffffff;
+  --sunk: #e9eddf;
+  --ink: #1d2619;
+  --muted: #5f6b57;
+  --line: #d7dccb;
+  --olive: #556f24;       /* olive oil green — the accent */
+  --olive-ink: #ffffff;
+  --zaatar: #8a6a2b;      /* za'atar brown — secondary */
+  --good: #2f7a3e;
+  --bad: #b23a2a;
+  --display: "Baloo Bhaijaan 2", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141811; --surface: #1c2118; --sunk: #232a1e; --ink: #ecefe3; --muted: #a3ad97;
+  --line: #333b2c; --olive: #9cbd5a; --olive-ink: #142008; --zaatar: #d1ad62; --good: #6cc27d; --bad: #ef7b67;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #141811; --surface: #1c2118; --sunk: #232a1e; --ink: #ecefe3; --muted: #a3ad97;
+  --line: #333b2c; --olive: #9cbd5a; --olive-ink: #142008; --zaatar: #d1ad62; --good: #6cc27d; --bad: #ef7b67;
+  color-scheme: dark }
+
+* { box-sizing: border-box }
+html, body { height: 100% }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45;
+  font-variant-numeric: tabular-nums; }
+button, input, select, textarea { font: inherit; color: inherit }
+button { cursor: pointer }
+:focus-visible { outline: 2px solid var(--olive); outline-offset: 2px }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important } }
+
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface) }
+
+/* Header */
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line) }
+.top-in { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 10px }
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0 }
+.brand b { font-family: var(--display); font-weight: 800; font-size: 26px; letter-spacing: .5px; color: var(--olive); line-height: 1 }
+.brand span { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted) }
+nav.tabs { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap }
+nav.tabs button { border: 0; background: transparent; padding: 8px 14px; border-radius: 999px; font-weight: 600; color: var(--muted) }
+nav.tabs button[aria-selected="true"] { background: var(--olive); color: var(--olive-ink) }
+.status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted) }
+.dot.on { background: var(--good) }
+
+main { padding-block: 16px 120px }
+section.view[hidden] { display: none }
+
+/* Register */
+.reg { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start }
+.cats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px }
+.chip { border: 1px solid var(--line); background: var(--surface); padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: 14px }
+.chip[aria-pressed="true"] { border-color: var(--olive); color: var(--olive); background: var(--sunk) }
+.search { flex: 1 1 180px; min-width: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 14px }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px }
+.item { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: var(--r); padding: 12px; display: flex; flex-direction: column; gap: 4px; min-height: 104px; position: relative; transition: transform .08s }
+.item:active { transform: scale(.97) }
+.item:hover { border-color: var(--olive) }
+.item .n { font-weight: 700; line-height: 1.2 }
+.item .ar { font-size: 13px; color: var(--zaatar); direction: rtl; text-align: right }
+.item .p { margin-top: auto; font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--olive) }
+.item .q { position: absolute; top: 8px; right: 8px; background: var(--olive); color: var(--olive-ink); border-radius: 999px; min-width: 24px; height: 24px; display: grid; place-items: center; font-size: 13px; font-weight: 700; padding: 0 6px }
+.catlabel { grid-column: 1 / -1; font-family: var(--display); font-weight: 700; font-size: 18px; color: var(--muted); margin-top: 6px }
+
+.ticket { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 76px); background: var(--surface); border: 1px solid var(--line); border-radius: 14px; display: flex; flex-direction: column; max-height: calc(100vh - 100px) }
+.t-head { padding: 14px 16px 10px; display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px dashed var(--line) }
+.t-head h2 { margin: 0; font-family: var(--display); font-size: 22px }
+.t-head .no { color: var(--muted); font-size: 13px }
+.lines { overflow: auto; padding: 6px 16px; flex: 1; min-height: 80px }
+.line { display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 8px 0; border-bottom: 1px solid var(--sunk) }
+.line .nm { font-weight: 600 }
+.line .amt { font-weight: 700; text-align: right }
+.line .ctl { display: flex; gap: 6px; align-items: center; grid-column: 1 / -1 }
+.qbtn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: var(--sunk); font-weight: 700; display: grid; place-items: center }
+.line .each { color: var(--muted); font-size: 13px; margin-left: 4px }
+.line .note { flex: 1; min-width: 0; border: 0; border-bottom: 1px dotted var(--line); background: transparent; font-size: 13px; padding: 2px 0 }
+.empty { color: var(--muted); padding: 24px 0; text-align: center }
+.t-foot { padding: 12px 16px 16px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 10px }
+.tot { display: flex; justify-content: space-between; align-items: baseline }
+.tot b { font-family: var(--display); font-size: 30px; color: var(--olive) }
+.pay { display: flex; gap: 6px }
+.pay button { flex: 1; border: 1px solid var(--line); background: var(--sunk); border-radius: 8px; padding: 8px; font-weight: 600; font-size: 14px }
+.pay button[aria-pressed="true"] { border-color: var(--olive); background: var(--olive); color: var(--olive-ink) }
+.cash { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center }
+.cash label { font-size: 13px; color: var(--muted) }
+.cash input { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; font-weight: 700; font-size: 18px }
+.quick { display: flex; gap: 6px; flex-wrap: wrap; grid-column: 1 / -1 }
+.quick button { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 600 }
+.change { grid-column: 1 / -1; display: flex; justify-content: space-between; font-weight: 700 }
+.change.short { color: var(--bad) }
+.btn { border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 700; font-size: 16px; background: var(--olive); color: var(--olive-ink) }
+.btn:disabled { opacity: .45; cursor: not-allowed }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); font-weight: 600; font-size: 14px; padding: 8px 14px }
+.btn.danger { background: transparent; color: var(--bad); border: 1px solid var(--line); font-weight: 600; font-size: 14px; padding: 8px 14px }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+
+.mbar { display: none }
+
+/* Panels */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px }
+h1.v { font-family: var(--display); font-size: 28px; margin: 0 0 4px; text-wrap: balance }
+.sub { color: var(--muted); margin: 0 0 16px }
+.kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px }
+.kpi span { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted) }
+.kpi b { display: block; font-family: var(--display); font-size: 26px; line-height: 1.2 }
+.two { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px }
+.tbl th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; padding: 6px 8px; border-bottom: 1px solid var(--line) }
+.tbl td { padding: 8px; border-bottom: 1px solid var(--sunk); vertical-align: top }
+.tbl td.r, .tbl th.r { text-align: right }
+.scroll { overflow-x: auto }
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--sunk); color: var(--muted) }
+.pill.void { color: var(--bad) }
+.pill.card { color: var(--zaatar) }
+.bar { height: 8px; background: var(--sunk); border-radius: 4px; overflow: hidden; margin-top: 4px }
+.bar i { display: block; height: 100%; background: var(--olive) }
+.voided td { color: var(--muted); text-decoration: line-through }
+.linkbtn { border: 0; background: none; color: var(--bad); font-size: 13px; padding: 0; text-decoration: underline }
+
+/* Menu manager */
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+.field label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em }
+.field input, .field select, .field textarea { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 8px 10px; width: 100% }
+.form { display: grid; grid-template-columns: 2fr 1.4fr 1.4fr 1fr; gap: 10px; align-items: end }
+.form .wide { grid-column: 1 / -1 }
+.mi-name { font-weight: 600 }
+.mi-ar { color: var(--zaatar); font-size: 13px; direction: rtl }
+.mi-desc { color: var(--muted); font-size: 13px }
+.off td { opacity: .5 }
+.toggle { border: 1px solid var(--line); background: var(--sunk); border-radius: 999px; font-size: 12px; padding: 2px 10px; font-weight: 600 }
+.toggle.on { background: var(--olive); color: var(--olive-ink); border-color: var(--olive) }
+
+/* Menu generator */
+.gen { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 20px; align-items: start }
+.gen .panel { display: flex; flex-direction: column; gap: 12px }
+.swatches { display: flex; gap: 8px }
+.sw { flex: 1; border: 2px solid var(--line); border-radius: 10px; padding: 8px 6px; font-size: 13px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--surface) }
+.sw i { width: 100%; height: 26px; border-radius: 6px; display: block }
+.sw[aria-pressed="true"] { border-color: var(--olive) }
+.checks { display: flex; flex-direction: column; gap: 6px }
+.checks label { display: flex; gap: 8px; align-items: center; font-size: 14px }
+.preview { background: var(--sunk); border-radius: 14px; padding: 16px; display: flex; justify-content: center }
+.preview canvas { width: 100%; max-width: 620px; height: auto; box-shadow: 0 6px 24px rgba(0,0,0,.18); border-radius: 4px; background: #fff }
+
+/* Modal */
+.modal { position: fixed; inset: 0; background: rgba(10, 14, 8, .55); display: grid; place-items: center; z-index: 20; padding: 16px }
+.receipt { background: var(--surface); width: min(380px, 100%); border-radius: 14px; padding: 20px; max-height: 90vh; overflow: auto }
+.receipt h3 { font-family: var(--display); margin: 0; font-size: 26px; color: var(--olive); text-align: center }
+.receipt .meta { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 10px }
+.receipt .big { text-align: center; font-family: var(--display); font-size: 54px; line-height: 1; margin: 8px 0 }
+.receipt .rl { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; font-size: 14px }
+.receipt hr { border: 0; border-top: 1px dashed var(--line); margin: 10px 0 }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 600; z-index: 30; font-size: 14px }
+.banner { background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; font-size: 14px; margin-bottom: 14px }
+
+@media (max-width: 900px) {
+  .reg { grid-template-columns: 1fr }
+  .ticket { position: fixed; inset: auto 0 0 0; top: auto; border-radius: 16px 16px 0 0; max-height: 82vh; z-index: 15; display: none;
+    padding-bottom: env(safe-area-inset-bottom, 0px); padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px) }
+  .ticket.open { display: flex }
+  .mbar { display: flex; position: fixed; inset: auto 0 0 0; z-index: 14; background: var(--olive); color: var(--olive-ink); border: 0;
+    padding-block: 14px calc(14px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+    justify-content: space-between; font-weight: 700; font-size: 17px; width: 100% }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .two, .gen { grid-template-columns: 1fr }
+  .form { grid-template-columns: 1fr 1fr }
+  nav.tabs { margin-left: 0; width: 100% }
+}
+@media (max-width: 480px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)) } .brand b { font-size: 22px } }
+
+.item .code { align-self: flex-start; font-size: 13px; font-weight: 800; background: var(--sunk); color: var(--ink); border-radius: 6px; padding: 1px 8px; margin-bottom: 2px }
+.mi-code { display: inline-block; min-width: 28px; text-align: center; font-weight: 800; background: var(--sunk); border-radius: 6px; padding: 1px 6px; margin-right: 6px }
+.kp { padding: 10px 16px; border-bottom: 1px dashed var(--line); background: var(--sunk) }
+.kp-buf { font-family: var(--display); font-size: 22px; font-weight: 700; min-height: 32px; line-height: 1.4 }
+.kp-buf .ph { color: var(--muted); font-weight: 500; font-size: 17px }
+.kp-buf .err { color: var(--bad); font-size: 17px }
+.kp-buf .cash { color: var(--zaatar) }
+.kp-hint { font-size: 11.5px; color: var(--muted); line-height: 1.7 }
+kbd { font-family: var(--body); font-size: 11px; font-weight: 700; border: 1px solid var(--line); border-bottom-width: 2px; background: var(--surface); border-radius: 4px; padding: 0 5px; margin: 0 1px }
+@media (max-width: 900px) { .kp { display: none } }
+.printopts { font-size: 13px; color: var(--muted); gap: 14px }
+.printopts label { display: flex; gap: 6px; align-items: center }
+.linkbtn.pr { color: var(--olive); margin-right: 10px }
+
+/* 80 mm thermal receipt — only rendered when printing */
+#printArea { display: none }
+@media print {
+  @page { size: 80mm auto; margin: 0 }
+  html, body { background: #fff !important; padding: 0 !important; margin: 0 !important }
+  body::before { display: none !important }
+  body > *:not(#printArea) { display: none !important }
+  #printArea { display: block; width: 72mm; margin: 0 auto; padding: 3mm 0 8mm; color: #000; font-family: Arial, "Segoe UI", Tahoma, sans-serif; font-size: 10pt; line-height: 1.35 }
+  #printArea * { color: #000 !important; background: none !important }
+  .copy + .copy { break-before: page }
+  .pc-c { text-align: center }
+  .pc-shop { font-size: 18pt; font-weight: 800; letter-spacing: 1px }
+  .pc-sm { font-size: 8.5pt }
+  .pc-no { font-size: 30pt; font-weight: 800; line-height: 1.1 }
+  .pc-hr { border: 0; border-top: 1px dashed #000; margin: 2mm 0 }
+  .pc-r { display: flex; justify-content: space-between; gap: 3mm }
+  .pc-r span:last-child { white-space: nowrap }
+  .pc-note { font-size: 9pt; font-style: italic; padding-left: 4mm }
+  .pc-tot { font-size: 14pt; font-weight: 800 }
+  .pc-k { font-size: 14pt; font-weight: 700 }
+  .pc-tag { display: inline-block; border: 1px solid #000; padding: 0 2mm; font-weight: 700; font-size: 9pt }
+}
+</style>
+
+<header class="top">
+  <div class="wrap top-in">
+    <div class="brand"><b id="shopName">LABANITA</b><span id="eventName">Cantine · Fagalla Fantasy</span></div>
+    <span class="status"><i class="dot" id="syncDot"></i><span id="syncTxt">Connecting…</span></span>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="register" aria-selected="true">Register</button>
+      <button role="tab" data-tab="sales" aria-selected="false">Sales</button>
+      <button role="tab" data-tab="menu" aria-selected="false">Menu items</button>
+      <button role="tab" data-tab="generator" aria-selected="false">Menu generator</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="localBanner" class="banner" hidden>Saving on this device only. Open this page in Claude while signed in to share the menu and sales across devices.</div>
+
+  <!-- REGISTER -->
+  <section class="view" id="v-register">
+    <div class="reg">
+      <div>
+        <div class="cats" id="catChips"></div>
+        <div class="grid" id="itemGrid"></div>
+      </div>
+      <aside class="ticket" id="ticket" aria-label="Current order">
+        <div class="t-head"><h2>Order</h2><span class="no" id="orderNo">#1</span><button class="btn ghost" id="closeTicket" style="display:none">Close</button></div>
+        <div class="kp" id="kp" aria-live="polite">
+          <div class="kp-buf" id="kpBuf"></div>
+          <div class="kp-hint">Number + <kbd>Enter</kbd> add item · <kbd>*</kbd> quantity · <kbd>+</kbd><kbd>−</kbd> last item · <kbd>/</kbd> cash received · <kbd>.</kbd> payment · <kbd>Enter</kbd> on empty = charge &amp; print</div>
+        </div>
+        <div class="lines" id="lines"></div>
+        <div class="t-foot">
+          <div class="tot"><span>Total</span><b id="total">0</b></div>
+          <div class="pay" id="payMethods">
+            <button data-pay="cash" aria-pressed="true">Cash</button>
+            <button data-pay="card" aria-pressed="false">Card</button>
+            <button data-pay="instapay" aria-pressed="false">InstaPay</button>
+          </div>
+          <div class="cash" id="cashBox">
+            <label for="tendered">Cash received</label>
+            <input id="tendered" type="number" inputmode="decimal" min="0" placeholder="0">
+            <div class="quick" id="quick"></div>
+            <div class="change" id="changeRow"><span>Change</span><span id="change">0</span></div>
+          </div>
+          <div class="row printopts" id="printOpts" hidden>
+            <label><input type="checkbox" id="autoPrint"> Print receipt on charge</label>
+            <label><input type="checkbox" id="kitchenCopy"> Kitchen copy</label>
+          </div>
+          <div class="row">
+            <button class="btn ghost" id="clearBtn">Clear</button>
+            <button class="btn" id="chargeBtn" style="flex:1" disabled>Charge</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+    <button class="mbar" id="mbar"><span id="mbarCount">No items</span><span id="mbarTotal">View order</span></button>
+  </section>
+
+  <!-- SALES -->
+  <section class="view" id="v-sales" hidden>
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <div><h1 class="v">Sales</h1><p class="sub" style="margin:0">Every order rung up on the register, by day.</p></div>
+      <div class="row">
+        <input type="date" id="salesDay" class="search" style="flex:0 0 auto">
+        <button class="btn ghost" id="csvBtn">Download CSV</button>
+      </div>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><span>Revenue</span><b id="kRev">0</b></div>
+      <div class="kpi"><span>Orders</span><b id="kOrd">0</b></div>
+      <div class="kpi"><span>Average order</span><b id="kAvg">0</b></div>
+      <div class="kpi"><span>Sandwiches sold</span><b id="kQty">0</b></div>
+    </div>
+    <div class="two">
+      <div class="panel"><h3 style="margin:0 0 8px">Orders</h3><div class="scroll"><table class="tbl" id="ordersTbl"></table></div></div>
+      <div class="panel"><h3 style="margin:0 0 8px">Best sellers</h3><div id="best"></div>
+        <h3 style="margin:18px 0 8px">By payment</h3><div id="byPay"></div></div>
+    </div>
+  </section>
+
+  <!-- MENU MANAGER -->
+  <section class="view" id="v-menu" hidden>
+    <h1 class="v">Menu items</h1>
+    <p class="sub">Add, edit and price what you sell. Changes show on the register right away.</p>
+    <div class="panel" style="margin-bottom:16px">
+      <form id="itemForm" class="form">
+        <div class="field"><label for="fName">Name</label><input id="fName" required placeholder="Labneh &amp; Za'atar"></div>
+        <div class="field"><label for="fAr">Arabic name</label><input id="fAr" dir="rtl" placeholder="لبنة وزعتر"></div>
+        <div class="field"><label for="fCat">Category</label><input id="fCat" list="catList" required placeholder="Labneh"><datalist id="catList"></datalist></div>
+        <div class="field"><label for="fPrice">Price</label><input id="fPrice" type="number" min="0" step="0.5" required placeholder="45"></div>
+        <div class="field wide"><label for="fDesc">Description (shown on the printed menu)</label><input id="fDesc" placeholder="Thick labneh, za'atar, olive oil, cucumber, fresh mint"></div>
+        <div class="row wide"><button class="btn" type="submit" id="saveItem">Add item</button><button class="btn ghost" type="button" id="cancelEdit" hidden>Cancel edit</button></div>
+      </form>
+    </div>
+    <div class="panel" style="margin-bottom:16px">
+      <h3 style="margin:0 0 10px">Shop details</h3>
+      <form id="cfgForm" class="form">
+        <div class="field"><label for="cShop">Shop name</label><input id="cShop"></div>
+        <div class="field"><label for="cSub">Subtitle</label><input id="cSub"></div>
+        <div class="field"><label for="cEvent">Event</label><input id="cEvent"></div>
+        <div class="field"><label for="cCur">Currency</label><input id="cCur"></div>
+        <div class="row wide"><button class="btn ghost" type="submit">Save details</button></div>
+      </form>
+    </div>
+    <div class="panel"><div class="scroll"><table class="tbl" id="menuTbl"></table></div></div>
+  </section>
+
+  <!-- MENU GENERATOR -->
+  <section class="view" id="v-generator" hidden>
+    <h1 class="v">Menu generator</h1>
+    <p class="sub">Builds a printable A4 menu from your items. Download it as a PNG to print or post.</p>
+    <div class="gen">
+      <div class="panel">
+        <div class="field"><label>Style</label>
+          <div class="swatches" id="styles">
+            <button class="sw" data-style="olive" aria-pressed="true"><i style="background:linear-gradient(90deg,#eef2e2 60%,#556f24 60%)"></i>Olive</button>
+            <button class="sw" data-style="chalk" aria-pressed="false"><i style="background:linear-gradient(90deg,#21281e 60%,#e3c86a 60%)"></i>Chalk</button>
+            <button class="sw" data-style="milk" aria-pressed="false"><i style="background:linear-gradient(90deg,#ffffff 60%,#1d2619 60%)"></i>Milk</button>
+          </div>
+        </div>
+        <div class="field"><label for="gTitle">Title</label><input id="gTitle"></div>
+        <div class="field"><label for="gTag">Tagline</label><input id="gTag" value="Fresh sandwiches, made to order"></div>
+        <div class="field"><label for="gFoot">Footer</label><input id="gFoot" value="Order at the counter · Ask about today's specials"></div>
+        <div class="field"><label for="gCols">Columns</label><select id="gCols"><option value="2">Two columns</option><option value="1">One column</option></select></div>
+        <div class="field"><label>Show</label>
+          <div class="checks">
+            <label><input type="checkbox" id="gAr" checked> Arabic names</label>
+            <label><input type="checkbox" id="gDesc" checked> Descriptions</label>
+            <label><input type="checkbox" id="gPrice" checked> Prices</label>
+          </div>
+        </div>
+        <div class="field"><label>Categories</label><div class="checks" id="gCats"></div></div>
+        <div class="row"><button class="btn" id="pngBtn">Download PNG</button><button class="btn ghost" id="txtBtn">Copy as text</button></div>
+        <textarea id="txtFallback" class="search" rows="6" hidden readonly style="border-radius:8px"></textarea>
+      </div>
+      <div class="preview"><canvas id="menuCanvas" width="1240" height="1754"></canvas></div>
+    </div>
+  </section>
+</main>
+
+<div class="modal" id="modal" hidden>
+  <div class="receipt" id="receipt"></div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<div id="printArea" aria-hidden="true"></div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const dayKey = (d = new Date()) => { const z = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`; };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+/* ---------- state ---------- */
+const S = {
+  items: [], cfg: { shop: "LABANITA", sub: "Cantine", event: "Fagalla Fantasy", currency: "EGP" },
+  orders: [], todayOrders: [], cart: [], pay: "cash", cat: "All", tab: "register",
+  salesDay: dayKey(), editing: null, genStyle: "olive", genCats: null,
+};
+// Outside claude.ai (the cashier PC copy) the page can print and save files directly.
+const standalone = !window.claude;
+const prefs = { auto: true, kitchen: false };
+try { Object.assign(prefs, JSON.parse(localStorage.getItem("labanita:print") || "{}")); } catch {}
+const payName = p => p === "instapay" ? "InstaPay" : p[0].toUpperCase() + p.slice(1);
+const money = n => (Math.round(n * 100) / 100).toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + S.cfg.currency;
+
+/* ---------- store: shared db when available, else this device ---------- */
+const Store = (() => {
+  let db = null; const local = {}; const subs = [];
+  const lsKey = c => "labanita:" + c;
+  const readLocal = c => { try { return JSON.parse(localStorage.getItem(lsKey(c)) || "{}"); } catch { return local[c] || {}; } };
+  const writeLocal = (c, obj) => { local[c] = obj; try { localStorage.setItem(lsKey(c), JSON.stringify(obj)); } catch {} };
+  const emitLocal = c => subs.filter(s => s.c === c && !s.remote).forEach(s => s.run());
+  function watchLocal(c, filter, cb) {
+    const s = { c, remote: false, run: () => { const o = readLocal(c); let rows = Object.entries(o).map(([id, d]) => ({ id, ...d })); if (filter) rows = rows.filter(r => r[filter[0]] === filter[1]); cb(rows); } };
+    subs.push(s); s.run(); return () => subs.splice(subs.indexOf(s), 1);
+  }
+  return {
+    get shared() { return !!db; },
+    setDb(x) { db = x; },
+    watch(c, filter, cb, onErr) {
+      if (!db) return watchLocal(c, filter, cb);
+      let q = db.collection(c); if (filter) q = q.where(filter[0], "==", filter[1]);
+      return q.onSnapshot(snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() }))), e => onErr && onErr(e));
+    },
+    async set(c, id, data) {
+      if (!db) { const o = readLocal(c); o[id] = data; writeLocal(c, o); emitLocal(c); return; }
+      await db.collection(c).doc(id).set(data);
+    },
+    async update(c, id, patch) {
+      if (!db) { const o = readLocal(c); o[id] = { ...o[id], ...patch }; writeLocal(c, o); emitLocal(c); return; }
+      await db.collection(c).doc(id).update(patch);
+    },
+    async del(c, id) {
+      if (!db) { const o = readLocal(c); delete o[id]; writeLocal(c, o); emitLocal(c); return; }
+      await db.collection(c).doc(id).delete();
+    },
+  };
+})();
+
+// LABANITA's real menu. Prices are 0 until set under Menu items.
+const SAMPLE = [
+  ["Syrian Fries", "بطاطس سوري", "Fasting · صيامي", 0, "Fries, toumeya garlic sauce, pickled cucumber"],
+  ["Chicken Burger", "تشيكن برجر", "Regular · فطاري", 0, ""],
+  ["Double Chicken Burger", "دوبل تشيكن برجر", "Regular · فطاري", 0, ""],
+  ["Beef Burger", "بيف برجر", "Regular · فطاري", 0, ""],
+  ["Double Beef Burger", "دوبل بيف برجر", "Regular · فطاري", 0, ""],
+  ["Rizo", "ريزو", "Regular · فطاري", 0, ""],
+  ["7UP (large)", "سفن أب صاروخ", "Drinks · مشروبات", 0, ""],
+  ["Pepsi (large)", "بيبسي صاروخ", "Drinks · مشروبات", 0, ""],
+];
+
+/* ---------- tabs ---------- */
+function showTab(t) {
+  S.tab = t;
+  $$("nav.tabs button").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
+  $$("section.view").forEach(v => v.hidden = v.id !== "v-" + t);
+  try { localStorage.setItem("labanita:tab", t); } catch {}
+  if (t === "generator") drawMenu();
+}
+$$("nav.tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+
+/* ---------- register ---------- */
+const activeItems = () => S.items.filter(i => i.active !== false);
+function catsOf(items) {
+  const m = new Map();
+  items.slice().sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0)).forEach(i => { if (!m.has(i.cat)) m.set(i.cat, []); m.get(i.cat).push(i); });
+  return m;
+}
+function renderRegister() {
+  const items = activeItems(); const cats = catsOf(items);
+  if (S.cat !== "All" && !cats.has(S.cat)) S.cat = "All";
+  $("#catChips").innerHTML = ["All", ...cats.keys()].map(c => `<button class="chip" data-cat="${esc(c)}" aria-pressed="${c === S.cat}">${esc(c)}</button>`).join("")
+    + `<input class="search" id="q" placeholder="Search menu" value="${esc(S.q || "")}" aria-label="Search menu">`;
+  $$("#catChips .chip").forEach(b => b.onclick = () => { S.cat = b.dataset.cat; renderRegister(); });
+  const q = $("#q"); q.oninput = () => { S.q = q.value; renderGrid(); };
+  renderGrid();
+  renderTicket();
+}
+function renderGrid() {
+  const items = activeItems(); const cats = catsOf(items); const term = (S.q || "").trim().toLowerCase();
+  const qty = id => S.cart.filter(l => l.id === id).reduce((a, l) => a + l.qty, 0);
+  const codes = codeMap();
+  let html = "";
+  if (!items.length) {
+    html = `<div class="empty" style="grid-column:1/-1">No menu items yet.<br><br><button class="btn" id="loadSample">Load LABANITA menu</button> <button class="btn ghost" id="goMenu">Add items myself</button></div>`;
+  }
+  for (const [c, list] of cats) {
+    if (S.cat !== "All" && c !== S.cat) continue;
+    const shown = list.filter(i => !term || (i.name + " " + (i.ar || "")).toLowerCase().includes(term));
+    if (!shown.length) continue;
+    if (S.cat === "All") html += `<div class="catlabel">${esc(c)}</div>`;
+    html += shown.map(i => { const n = qty(i.id); return `<button class="item" data-id="${i.id}">${n ? `<span class="q">${n}</span>` : ""}<span class="code">${codes.get(i.id)}</span><span class="n">${esc(i.name)}</span>${i.ar ? `<span class="ar">${esc(i.ar)}</span>` : ""}<span class="p">${money(i.price)}</span></button>`; }).join("");
+  }
+  $("#itemGrid").innerHTML = html;
+  $$("#itemGrid .item").forEach(b => b.onclick = () => addToCart(b.dataset.id));
+  const ls = $("#loadSample"); if (ls) ls.onclick = loadSample;
+  const gm = $("#goMenu"); if (gm) gm.onclick = () => showTab("menu");
+}
+// Keypad numbers: items on sale, numbered 1..N in menu order.
+const codeList = () => [...catsOf(activeItems()).values()].flat();
+const codeMap = () => new Map(codeList().map((i, k) => [i.id, k + 1]));
+function addToCart(id, n = 1) {
+  const it = S.items.find(i => i.id === id); if (!it) return;
+  const l = S.cart.find(l => l.id === id && !l.note);
+  if (l) l.qty += n; else S.cart.push({ key: uid(), id, name: it.name, ar: it.ar || "", price: Number(it.price), qty: n, note: "" });
+  renderGrid(); renderTicket();
+}
+const cartTotal = () => S.cart.reduce((a, l) => a + l.price * l.qty, 0);
+const nextNo = () => S.todayOrders.reduce((m, o) => Math.max(m, o.no || 0), 0) + 1;
+function renderTicket() {
+  $("#orderNo").textContent = "#" + nextNo();
+  const L = $("#lines");
+  L.innerHTML = S.cart.length ? S.cart.map(l => `
+    <div class="line" data-k="${l.key}">
+      <span class="nm">${esc(l.name)}</span><span class="amt">${money(l.price * l.qty)}</span>
+      <div class="ctl"><button class="qbtn" data-a="-" aria-label="One less">−</button><b>${l.qty}</b><button class="qbtn" data-a="+" aria-label="One more">+</button>
+      <span class="each">× ${money(l.price)}</span><input class="note" data-a="note" placeholder="Note (no onions…)" value="${esc(l.note)}" aria-label="Note for ${esc(l.name)}"></div>
+    </div>`).join("") : `<div class="empty">Tap a sandwich to add it.</div>`;
+  $$(".line", L).forEach(row => {
+    const l = S.cart.find(x => x.key === row.dataset.k);
+    row.querySelector('[data-a="-"]').onclick = () => { l.qty--; if (l.qty <= 0) S.cart.splice(S.cart.indexOf(l), 1); renderGrid(); renderTicket(); };
+    row.querySelector('[data-a="+"]').onclick = () => { l.qty++; renderGrid(); renderTicket(); };
+    row.querySelector('[data-a="note"]').oninput = e => { l.note = e.target.value; };
+  });
+  const t = cartTotal();
+  $("#total").textContent = money(t);
+  $$("#payMethods button").forEach(b => b.setAttribute("aria-pressed", b.dataset.pay === S.pay));
+  $("#cashBox").hidden = S.pay !== "cash";
+  const opts = [...new Set([t, ...[50, 100, 200, 500].filter(v => v > t)].filter(v => v > 0))].slice(0, 4);
+  $("#quick").innerHTML = opts.map(v => `<button data-v="${v}">${v === t ? "Exact" : v}</button>`).join("");
+  $$("#quick button").forEach(b => b.onclick = () => { $("#tendered").value = b.dataset.v; updChange(); });
+  updChange();
+  const n = S.cart.reduce((a, l) => a + l.qty, 0);
+  $("#mbarCount").textContent = n ? `${n} item${n > 1 ? "s" : ""} · ${money(t)}` : "No items yet";
+  $("#mbarTotal").textContent = "View order";
+  renderKp();
+}
+
+/* ---------- number keypad ---------- */
+const KP = { buf: "", qty: null, mode: "item", err: "" };
+const kpReset = () => Object.assign(KP, { buf: "", qty: null, mode: "item" });
+function renderKp() {
+  const el = $("#kpBuf"); let h;
+  if (KP.mode === "cash") h = `<span class="cash">Cash received: ${KP.buf ? money(Number(KP.buf)) : "…"}</span>`;
+  else if (KP.buf || KP.qty) {
+    const it = KP.buf ? codeList()[Number(KP.buf) - 1] : null;
+    h = `${KP.qty ? KP.qty + " × " : ""}${KP.buf ? "No. " + KP.buf : "item number…"}${it ? ` <span class="ph">${esc(it.name)}</span>` : ""}`;
+  } else h = KP.err ? `<span class="err">${esc(KP.err)}</span>` : `<span class="ph">Type item number</span>`;
+  el.innerHTML = h;
+}
+function addByCode() {
+  const it = codeList()[Number(KP.buf) - 1];
+  if (!it) { KP.err = `There is no item number ${KP.buf}`; kpReset(); return; }
+  addToCart(it.id, KP.qty || 1); kpReset();
+}
+document.addEventListener("keydown", e => {
+  if (S.tab !== "register" || e.ctrlKey || e.altKey || e.metaKey) return;
+  const t = e.target, k = e.key;
+  if (t.id === "tendered") { if (k === "Enter") { e.preventDefault(); charge(); } return; }
+  if (t.matches?.("input, textarea, select")) { if (k === "Enter" || k === "Escape") t.blur(); return; }
+  if (!$("#modal").hidden) { $("#modal").hidden = true; if (k === "Enter" || k === "Escape") { e.preventDefault(); return; } }
+  KP.err = "";
+  if (/^[0-9]$/.test(k)) { if (KP.buf.length < 6) KP.buf += k; }
+  else if (k === "*") { if (KP.mode === "item" && KP.buf) { KP.qty = Number(KP.buf) || null; KP.buf = ""; } }
+  else if (k === "Enter") {
+    if (KP.mode === "cash") { if (KP.buf) $("#tendered").value = KP.buf; updChange(); kpReset(); charge(); }
+    else if (KP.buf) addByCode();
+    else charge();
+  }
+  else if (k === "Backspace") { if (KP.buf) KP.buf = KP.buf.slice(0, -1); else if (KP.qty) KP.qty = null; else if (KP.mode === "cash") KP.mode = "item"; else return; }
+  else if (k === "Escape") kpReset();
+  else if (k === "+") { const l = S.cart.at(-1); if (l) { l.qty++; renderGrid(); renderTicket(); } }
+  else if (k === "-") { const l = S.cart.at(-1); if (l) { l.qty--; if (l.qty <= 0) S.cart.pop(); renderGrid(); renderTicket(); } }
+  else if (k === "/") { if (S.cart.length) { S.pay = "cash"; renderTicket(); Object.assign(KP, { mode: "cash", buf: "", qty: null }); } }
+  else if (k === "." || k === ",") { const p = ["cash", "card", "instapay"]; S.pay = p[(p.indexOf(S.pay) + 1) % 3]; renderTicket(); }
+  else return;
+  e.preventDefault(); renderKp();
+});
+function updChange() {
+  const t = cartTotal(); const got = Number($("#tendered").value || 0);
+  const short = S.pay === "cash" && got > 0 && got < t;
+  $("#change").textContent = got ? (short ? "Short " + money(t - got) : money(got - t)) : "—";
+  $("#changeRow").classList.toggle("short", short);
+  $("#chargeBtn").disabled = !S.cart.length || short;
+  $("#chargeBtn").textContent = S.cart.length ? "Charge " + money(t) : "Charge";
+}
+$("#tendered").oninput = updChange;
+$$("#payMethods button").forEach(b => b.onclick = () => { S.pay = b.dataset.pay; renderTicket(); });
+$("#clearBtn").onclick = () => { S.cart = []; $("#tendered").value = ""; renderGrid(); renderTicket(); };
+$("#mbar").onclick = () => { $("#ticket").classList.add("open"); $("#closeTicket").style.display = ""; };
+$("#closeTicket").onclick = () => { $("#ticket").classList.remove("open"); $("#closeTicket").style.display = "none"; };
+
+$("#chargeBtn").onclick = () => charge();
+async function charge() {
+  const t = cartTotal(); if (!S.cart.length) return;
+  if ($("#chargeBtn").textContent === "Saving…") return;
+  if ($("#chargeBtn").disabled) { KP.err = "Cash received is less than the total"; renderKp(); return; }
+  const got = S.pay === "cash" ? Number($("#tendered").value || t) : t;
+  const now = new Date();
+  const order = {
+    no: nextNo(), day: dayKey(now), at: now.getTime(), pay: S.pay, total: t, tendered: got, change: Math.max(0, got - t), status: "paid",
+    lines: S.cart.map(l => ({ id: l.id, name: l.name, price: l.price, qty: l.qty, note: l.note || "" })),
+  };
+  const btn = $("#chargeBtn"); btn.disabled = true; btn.textContent = "Saving…";
+  try {
+    await Store.set("orders", now.getTime().toString(36) + "-" + uid().slice(-4), order);
+    S.cart = []; $("#tendered").value = "";
+    $("#ticket").classList.remove("open"); $("#closeTicket").style.display = "none";
+    if (standalone && prefs.auto) printOrder(order);
+    showReceipt(order); renderGrid(); renderTicket();
+  } catch (e) { toast(errMsg(e, "The order was not saved.")); updChange(); }
+};
+function showReceipt(o) {
+  const d = new Date(o.at);
+  $("#receipt").innerHTML = `
+    <h3>${esc(S.cfg.shop)}</h3><div class="meta">${esc(S.cfg.sub)} · ${esc(S.cfg.event)}<br>${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</div>
+    <div class="meta">Order number</div><div class="big">#${o.no}</div><hr>
+    ${o.lines.map(l => `<div class="rl"><span>${l.qty} × ${esc(l.name)}${l.note ? `<br><small style="color:var(--muted)">${esc(l.note)}</small>` : ""}</span><span>${money(l.price * l.qty)}</span></div>`).join("")}
+    <hr><div class="rl"><b>Total</b><b>${money(o.total)}</b></div>
+    <div class="rl"><span>Paid (${o.pay === "instapay" ? "InstaPay" : o.pay[0].toUpperCase() + o.pay.slice(1)})</span><span>${money(o.tendered)}</span></div>
+    ${o.pay === "cash" ? `<div class="rl"><b>Change</b><b>${money(o.change)}</b></div>` : ""}
+    <hr><div class="row">${standalone ? `<button class="btn ghost" id="printRc">Print again</button>` : ""}<button class="btn" id="newOrder" style="flex:1">New order</button></div>`;
+  $("#modal").hidden = false; $("#newOrder").focus();
+  $("#newOrder").onclick = () => $("#modal").hidden = true;
+  const pr = $("#printRc"); if (pr) pr.onclick = () => printOrder(o);
+  // Close on its own so the next order can start straight from the keypad.
+  clearTimeout(showReceipt.t); showReceipt.t = setTimeout(() => { $("#modal").hidden = true; }, 5000);
+}
+function printOrder(o) {
+  const d = new Date(o.at);
+  const when = `${d.toLocaleDateString("en-GB")} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  const head = `<div class="pc-c"><div class="pc-shop">${esc(S.cfg.shop)}</div><div class="pc-sm">${esc([S.cfg.sub, S.cfg.event].filter(Boolean).join(" · "))}</div></div>`;
+  const customer = `<div class="copy">${head}<hr class="pc-hr">
+    <div class="pc-c pc-sm">Order number</div><div class="pc-c pc-no">#${o.no}</div><div class="pc-c pc-sm">${when}</div><hr class="pc-hr">
+    ${o.lines.map(l => `<div class="pc-r"><span>${l.qty} × ${esc(l.name)}</span><span>${money(l.price * l.qty)}</span></div>${l.note ? `<div class="pc-note">${esc(l.note)}</div>` : ""}`).join("")}
+    <hr class="pc-hr"><div class="pc-r pc-tot"><span>Total</span><span>${money(o.total)}</span></div>
+    <div class="pc-r"><span>Paid · ${payName(o.pay)}</span><span>${money(o.tendered)}</span></div>
+    ${o.pay === "cash" ? `<div class="pc-r"><span>Change</span><span>${money(o.change)}</span></div>` : ""}
+    <hr class="pc-hr"><div class="pc-c">Thank you! · شكرًا لزيارتكم</div></div>`;
+  const kitchen = `<div class="copy"><div class="pc-c"><span class="pc-tag">KITCHEN</span></div><div class="pc-c pc-no">#${o.no}</div><div class="pc-c pc-sm">${when}</div><hr class="pc-hr">
+    ${o.lines.map(l => `<div class="pc-k">${l.qty} × ${esc(l.name)}</div>${l.note ? `<div class="pc-note" style="font-size:12pt">» ${esc(l.note)}</div>` : ""}`).join("")}<hr class="pc-hr"></div>`;
+  $("#printArea").innerHTML = customer + (prefs.kitchen ? kitchen : "");
+  window.print();
+}
+$("#modal").onclick = e => { if (e.target.id === "modal") $("#modal").hidden = true; };
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#modal").hidden = true; });
+
+/* ---------- sales ---------- */
+let unsubSales = null;
+function watchSales() {
+  if (unsubSales) unsubSales();
+  if (S.salesDay === dayKey()) { unsubSales = null; S.orders = S.todayOrders; renderSales(); return; }
+  unsubSales = Store.watch("orders", ["day", S.salesDay], rows => { S.orders = rows; renderSales(); });
+}
+function renderSales() {
+  const all = S.orders.slice().sort((a, b) => b.at - a.at);
+  const paid = all.filter(o => o.status !== "void");
+  const rev = paid.reduce((a, o) => a + o.total, 0);
+  const qty = paid.reduce((a, o) => a + o.lines.reduce((x, l) => x + l.qty, 0), 0);
+  $("#kRev").textContent = money(rev); $("#kOrd").textContent = paid.length;
+  $("#kAvg").textContent = paid.length ? money(rev / paid.length) : "—"; $("#kQty").textContent = qty;
+  $("#ordersTbl").innerHTML = all.length ? `<thead><tr><th>#</th><th>Time</th><th>Items</th><th>Paid</th><th class="r">Total</th><th></th></tr></thead><tbody>` +
+    all.map(o => `<tr class="${o.status === "void" ? "voided" : ""}"><td><b>${o.no}</b></td><td>${new Date(o.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
+      <td>${o.lines.map(l => `${l.qty}× ${esc(l.name)}`).join(", ")}</td>
+      <td>${o.status === "void" ? `<span class="pill void">Void</span>` : `<span class="pill ${o.pay !== "cash" ? "card" : ""}">${o.pay === "instapay" ? "InstaPay" : o.pay}</span>`}</td>
+      <td class="r">${money(o.total)}</td><td style="white-space:nowrap">${standalone && o.status !== "void" ? `<button class="linkbtn pr" data-print="${o.id}">Print</button>` : ""}${o.status === "void" ? "" : `<button class="linkbtn" data-void="${o.id}">Void</button>`}</td></tr>`).join("") + "</tbody>"
+    : `<tbody><tr><td class="empty">No orders on this day yet. Orders you charge on the register appear here.</td></tr></tbody>`;
+  $$("[data-print]").forEach(b => b.onclick = () => printOrder(S.orders.find(o => o.id === b.dataset.print)));
+  $$("[data-void]").forEach(b => b.onclick = () => {
+    if (b.dataset.armed) { Store.update("orders", b.dataset.void, { status: "void" }).catch(e => toast(errMsg(e, "Could not void."))); return; }
+    b.dataset.armed = 1; b.textContent = "Confirm void"; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = "Void"; } }, 3000);
+  });
+  const by = new Map(); paid.forEach(o => o.lines.forEach(l => { const r = by.get(l.name) || { q: 0, v: 0 }; r.q += l.qty; r.v += l.qty * l.price; by.set(l.name, r); }));
+  const top = [...by].sort((a, b) => b[1].q - a[1].q).slice(0, 8); const max = top[0]?.[1].q || 1;
+  $("#best").innerHTML = top.length ? top.map(([n, r]) => `<div style="margin-bottom:10px"><div class="row" style="justify-content:space-between"><span>${esc(n)}</span><span><b>${r.q}</b> · ${money(r.v)}</span></div><div class="bar"><i style="width:${r.q / max * 100}%"></i></div></div>`).join("") : `<p class="sub">Nothing sold yet.</p>`;
+  const bp = { cash: 0, card: 0, instapay: 0 }; paid.forEach(o => bp[o.pay] = (bp[o.pay] || 0) + o.total);
+  $("#byPay").innerHTML = Object.entries(bp).map(([k, v]) => `<div class="row" style="justify-content:space-between;padding:4px 0"><span>${k === "instapay" ? "InstaPay" : k[0].toUpperCase() + k.slice(1)}</span><b>${money(v)}</b></div>`).join("");
+}
+$("#salesDay").value = S.salesDay;
+$("#salesDay").onchange = e => { S.salesDay = e.target.value || dayKey(); watchSales(); };
+$("#csvBtn").onclick = async () => {
+  const rows = [["order", "time", "status", "payment", "item", "qty", "price", "line_total", "note"]];
+  S.orders.slice().sort((a, b) => a.at - b.at).forEach(o => o.lines.forEach(l => rows.push([o.no, new Date(o.at).toLocaleString(), o.status, o.pay, l.name, l.qty, l.price, l.qty * l.price, l.note])));
+  const csv = rows.map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
+  saveFile(`labanita-sales-${S.salesDay}.csv`, "﻿" + csv);
+};
+
+/* ---------- menu manager ---------- */
+function renderMenu() {
+  const cats = catsOf(S.items); const codes = codeMap();
+  $("#catList").innerHTML = [...cats.keys()].map(c => `<option value="${esc(c)}">`).join("");
+  let html = `<thead><tr><th>Item</th><th>Category</th><th class="r">Price</th><th>On sale</th><th></th></tr></thead><tbody>`;
+  if (!S.items.length) html += `<tr><td colspan="5" class="empty">No items yet. Add your first sandwich above, or <button class="btn ghost" id="loadSample2">load the LABANITA menu</button></td></tr>`;
+  for (const [c, list] of cats) list.forEach((i, idx) => {
+    html += `<tr class="${i.active === false ? "off" : ""}"><td><div class="mi-name"><span class="mi-code" title="Keypad number">${codes.get(i.id) ?? "–"}</span>${esc(i.name)}</div>${i.ar ? `<div class="mi-ar">${esc(i.ar)}</div>` : ""}${i.desc ? `<div class="mi-desc">${esc(i.desc)}</div>` : ""}</td>
+      <td>${esc(c)}</td><td class="r"><b>${money(i.price)}</b></td>
+      <td><button class="toggle ${i.active === false ? "" : "on"}" data-tog="${i.id}">${i.active === false ? "Hidden" : "On sale"}</button></td>
+      <td><div class="row" style="flex-wrap:nowrap"><button class="qbtn" data-up="${i.id}" aria-label="Move up" ${idx === 0 ? "disabled" : ""}>↑</button><button class="btn ghost" data-edit="${i.id}">Edit</button><button class="btn danger" data-del="${i.id}">Delete</button></div></td></tr>`;
+  });
+  $("#menuTbl").innerHTML = html + "</tbody>";
+  const ls = $("#loadSample2"); if (ls) ls.onclick = loadSample;
+  $$("[data-tog]").forEach(b => b.onclick = () => { const i = S.items.find(x => x.id === b.dataset.tog); Store.update("menu", i.id, { active: i.active === false }).catch(e => toast(errMsg(e))); });
+  $$("[data-edit]").forEach(b => b.onclick = () => startEdit(b.dataset.edit));
+  $$("[data-up]").forEach(b => b.onclick = () => moveUp(b.dataset.up));
+  $$("[data-del]").forEach(b => b.onclick = () => {
+    if (!b.dataset.armed) { b.dataset.armed = 1; b.textContent = "Confirm"; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = "Delete"; } }, 3000); return; }
+    Store.del("menu", b.dataset.del).then(() => toast("Item deleted")).catch(e => toast(errMsg(e)));
+  });
+}
+async function moveUp(id) {
+  const list = catsOf(S.items).get(S.items.find(i => i.id === id).cat); const k = list.findIndex(i => i.id === id); if (k < 1) return;
+  const a = list[k], b = list[k - 1]; const sa = a.sort ?? 0, sb = b.sort ?? 0;
+  try { await Store.update("menu", a.id, { sort: sb === sa ? sb - 1 : sb }); await Store.update("menu", b.id, { sort: sa }); } catch (e) { toast(errMsg(e)); }
+}
+function startEdit(id) {
+  const i = S.items.find(x => x.id === id); S.editing = id;
+  $("#fName").value = i.name; $("#fAr").value = i.ar || ""; $("#fCat").value = i.cat; $("#fPrice").value = i.price; $("#fDesc").value = i.desc || "";
+  $("#saveItem").textContent = "Save changes"; $("#cancelEdit").hidden = false; $("#fName").focus();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function resetForm() { S.editing = null; $("#itemForm").reset(); $("#saveItem").textContent = "Add item"; $("#cancelEdit").hidden = true; }
+$("#cancelEdit").onclick = resetForm;
+$("#itemForm").onsubmit = async e => {
+  e.preventDefault();
+  const data = { name: $("#fName").value.trim(), ar: $("#fAr").value.trim(), cat: $("#fCat").value.trim(), price: Number($("#fPrice").value), desc: $("#fDesc").value.trim() };
+  if (!data.name || !data.cat || !(data.price >= 0)) return;
+  try {
+    if (S.editing) { await Store.update("menu", S.editing, data); toast("Saved " + data.name); }
+    else { await Store.set("menu", uid(), { ...data, active: true, sort: Math.max(0, ...S.items.map(i => i.sort ?? 0)) + 1 }); toast("Added " + data.name); }
+    const keepCat = data.cat; resetForm(); $("#fCat").value = keepCat;
+  } catch (err) { toast(errMsg(err, "Not saved.")); }
+};
+async function loadSample() {
+  try { for (let k = 0; k < SAMPLE.length; k++) { const [name, ar, cat, price, desc] = SAMPLE[k]; await Store.set("menu", "s" + (k + 1), { name, ar, cat, price, desc, active: true, sort: k + 1 }); } toast("Menu loaded. Set the prices under Menu items."); }
+  catch (e) { toast(errMsg(e)); }
+}
+function fillCfg() { $("#cShop").value = S.cfg.shop; $("#cSub").value = S.cfg.sub; $("#cEvent").value = S.cfg.event; $("#cCur").value = S.cfg.currency; }
+$("#cfgForm").onsubmit = async e => {
+  e.preventDefault();
+  const cfg = { shop: $("#cShop").value.trim() || "LABANITA", sub: $("#cSub").value.trim(), event: $("#cEvent").value.trim(), currency: $("#cCur").value.trim() || "EGP" };
+  try { await Store.set("config", "main", cfg); toast("Details saved"); } catch (err) { toast(errMsg(err)); }
+};
+function applyCfg() {
+  $("#shopName").textContent = S.cfg.shop; $("#eventName").textContent = [S.cfg.sub, S.cfg.event].filter(Boolean).join(" · ");
+  if (!$("#gTitle").dataset.touched) $("#gTitle").value = S.cfg.shop;
+}
+
+/* ---------- menu generator (canvas) ---------- */
+const THEMES = {
+  olive: { bg: "#eef2e2", ink: "#1d2619", muted: "#5b6650", accent: "#556f24", accent2: "#8a6a2b", rule: "#c5cdb2", band: "#556f24", bandInk: "#f6f8ef" },
+  chalk: { bg: "#21281e", ink: "#f1eedc", muted: "#b3b8a2", accent: "#e3c86a", accent2: "#a8c97a", rule: "#46503f", band: "#2b3427", bandInk: "#e3c86a" },
+  milk:  { bg: "#ffffff", ink: "#1d2619", muted: "#6b7363", accent: "#1d2619", accent2: "#556f24", rule: "#dcdfd4", band: "#ffffff", bandInk: "#1d2619" },
+};
+function wrapText(ctx, text, maxW) {
+  const words = String(text).split(/\s+/); const lines = []; let cur = "";
+  for (const w of words) { const t = cur ? cur + " " + w : w; if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
+  if (cur) lines.push(cur); return lines;
+}
+let fontsReady = null;
+function loadFonts() {
+  if (!fontsReady) fontsReady = Promise.all(["800 120px 'Baloo Bhaijaan 2'", "700 40px 'Baloo Bhaijaan 2'", "600 30px Figtree", "700 30px Figtree", "400 22px Figtree", "500 26px 'Baloo Bhaijaan 2'"].map(f => document.fonts.load(f, "Labanita لبنة"))).catch(() => {});
+  return fontsReady;
+}
+function genOptions() {
+  return { title: $("#gTitle").value.trim() || S.cfg.shop, tag: $("#gTag").value.trim(), foot: $("#gFoot").value.trim(), cols: Number($("#gCols").value),
+    ar: $("#gAr").checked, desc: $("#gDesc").checked, price: $("#gPrice").checked };
+}
+function renderGenCats() {
+  const cats = [...catsOf(activeItems()).keys()];
+  if (!S.genCats) S.genCats = new Set(cats); cats.forEach(c => { if (!S.genCatsSeen?.has(c)) S.genCats.add(c); }); S.genCatsSeen = new Set(cats);
+  $("#gCats").innerHTML = cats.length ? cats.map((c, k) => `<label><input type="checkbox" id="gc${k}" data-c="${esc(c)}" ${S.genCats.has(c) ? "checked" : ""}> ${esc(c)}</label>`).join("") : `<span class="sub">Add items first.</span>`;
+  $$("#gCats input").forEach(i => i.onchange = () => { i.checked ? S.genCats.add(i.dataset.c) : S.genCats.delete(i.dataset.c); drawMenu(); });
+}
+async function drawMenu() {
+  await loadFonts();
+  const cv = $("#menuCanvas"); const ctx = cv.getContext("2d"); const o = genOptions(); const T = THEMES[S.genStyle];
+  const W = 1240, M = 96, GAP = 64; const cols = o.cols; const colW = (W - M * 2 - GAP * (cols - 1)) / cols;
+  const cats = [...catsOf(activeItems())].filter(([c]) => S.genCats?.has(c));
+  const F = { title: "800 150px 'Baloo Bhaijaan 2', sans-serif", cat: "700 46px 'Baloo Bhaijaan 2', sans-serif", name: "700 30px Figtree, sans-serif", price: "700 30px Figtree, sans-serif",
+    ar: "500 27px 'Baloo Bhaijaan 2', sans-serif", desc: "400 22px Figtree, sans-serif", small: "600 22px Figtree, sans-serif" };
+  // measure blocks: each category => list of draw ops with height
+  const blocks = cats.map(([c, list]) => {
+    let h = 64; const rows = list.map(i => {
+      ctx.font = F.price; const pw = o.price ? ctx.measureText(String(i.price)).width + 24 : 0;
+      ctx.font = F.name; const nameLines = wrapText(ctx, i.name, colW - pw - 30);
+      ctx.font = F.desc; const descLines = o.desc && i.desc ? wrapText(ctx, i.desc, colW) : [];
+      const rh = nameLines.length * 38 + (o.ar && i.ar ? 34 : 0) + descLines.length * 29 + 26;
+      h += rh; return { i, nameLines, descLines, rh };
+    });
+    return { c, rows, h: h + 30 };
+  });
+  // balance into columns (greedy, keep order)
+  const colsArr = Array.from({ length: cols }, () => ({ h: 0, blocks: [] }));
+  if (cols === 1) colsArr[0].blocks = blocks, colsArr[0].h = blocks.reduce((a, b) => a + b.h, 0);
+  else { const total = blocks.reduce((a, b) => a + b.h, 0); let k = 0; for (const b of blocks) { if (k < cols - 1 && colsArr[k].h > 0 && colsArr[k].h + b.h / 2 > total / cols) k++; colsArr[k].blocks.push(b); colsArr[k].h += b.h; } }
+  const headH = 430, footH = 150; const bodyH = Math.max(...colsArr.map(c => c.h), 200);
+  const H = Math.max(1754, headH + bodyH + footH);
+  cv.height = H;
+  ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, H);
+  // header band
+  ctx.fillStyle = T.band; ctx.fillRect(0, 0, W, headH - 50);
+  ctx.textAlign = "center"; ctx.fillStyle = T.bandInk;
+  ctx.font = "700 24px Figtree, sans-serif"; ctx.letterSpacing = "6px";
+  ctx.fillText((S.cfg.event || "").toUpperCase(), W / 2, 98); ctx.letterSpacing = "0px";
+  ctx.font = F.title; ctx.fillText(o.title, W / 2, 238);
+  ctx.font = "500 40px 'Baloo Bhaijaan 2', sans-serif"; ctx.fillText(S.cfg.sub || "", W / 2, 292);
+  if (o.tag) { ctx.globalAlpha = .85; ctx.font = "400 26px Figtree, sans-serif"; ctx.fillText(o.tag, W / 2, 338); ctx.globalAlpha = 1; }
+  if (S.genStyle === "milk") { ctx.fillStyle = T.rule; ctx.fillRect(M, headH - 52, W - M * 2, 2); }
+  // body
+  ctx.textAlign = "left";
+  colsArr.forEach((col, ci) => {
+    const x0 = M + ci * (colW + GAP); let y = headH + 10;
+    col.blocks.forEach(b => {
+      ctx.fillStyle = T.accent; ctx.font = F.cat; ctx.fillText(b.c, x0, y + 40);
+      ctx.fillStyle = T.rule; ctx.fillRect(x0, y + 56, colW, 2);
+      y += 64 + 26;
+      b.rows.forEach(r => {
+        let yy = y;
+        ctx.fillStyle = T.ink; ctx.font = F.name;
+        r.nameLines.forEach((ln, k) => ctx.fillText(ln, x0, yy + k * 38));
+        if (o.price) {
+          const last = r.nameLines[r.nameLines.length - 1]; const lw = ctx.measureText(last).width; const ly = yy + (r.nameLines.length - 1) * 38;
+          ctx.font = F.price; const ps = String(r.i.price); const pw = ctx.measureText(ps).width;
+          ctx.fillStyle = T.accent; ctx.fillText(ps, x0 + colW - pw, ly);
+          ctx.fillStyle = T.rule; for (let dx = x0 + lw + 14; dx < x0 + colW - pw - 14; dx += 12) ctx.fillRect(dx, ly - 6, 3, 3);
+        }
+        yy += (r.nameLines.length - 1) * 38;
+        if (o.ar && r.i.ar) { yy += 34; ctx.fillStyle = T.accent2; ctx.font = F.ar; ctx.direction = "rtl"; ctx.textAlign = "left"; ctx.fillText(r.i.ar, x0, yy); ctx.direction = "ltr"; }
+        ctx.fillStyle = T.muted; ctx.font = F.desc;
+        r.descLines.forEach((ln, k) => ctx.fillText(ln, x0, yy + 30 + k * 29));
+        y += r.rh;
+      });
+      y += 30;
+    });
+  });
+  if (!cats.length) { ctx.fillStyle = T.muted; ctx.font = F.name; ctx.textAlign = "center"; ctx.fillText("Add menu items to fill this menu.", W / 2, headH + 120); }
+  // footer
+  ctx.textAlign = "center"; ctx.fillStyle = T.rule; ctx.fillRect(M, H - footH + 20, W - M * 2, 2);
+  ctx.fillStyle = T.muted; ctx.font = F.small;
+  if (o.foot) ctx.fillText(o.foot, W / 2, H - footH + 72);
+  if (o.price) { ctx.font = "400 20px Figtree, sans-serif"; ctx.fillText("Prices in " + S.cfg.currency, W / 2, H - footH + 106); }
+  ctx.textAlign = "left";
+}
+$$("#styles .sw").forEach(b => b.onclick = () => { S.genStyle = b.dataset.style; $$("#styles .sw").forEach(x => x.setAttribute("aria-pressed", x === b)); drawMenu(); });
+["#gTitle", "#gTag", "#gFoot"].forEach(s => $(s).addEventListener("input", e => { if (s === "#gTitle") e.target.dataset.touched = 1; drawMenu(); }));
+["#gCols", "#gAr", "#gDesc", "#gPrice"].forEach(s => $(s).addEventListener("change", drawMenu));
+$("#pngBtn").onclick = async () => {
+  await drawMenu();
+  $("#menuCanvas").toBlob(b => b && saveFile(`labanita-menu-${S.genStyle}.png`, b), "image/png");
+};
+$("#txtBtn").onclick = () => {
+  const o = genOptions(); let t = `*${o.title}* ${S.cfg.sub ? "— " + S.cfg.sub : ""}\n${S.cfg.event}\n${o.tag ? o.tag + "\n" : ""}`;
+  for (const [c, list] of catsOf(activeItems())) { if (!S.genCats?.has(c)) continue; t += `\n*${c}*\n`; list.forEach(i => t += `• ${i.name}${o.ar && i.ar ? " | " + i.ar : ""}${o.price ? " — " + money(i.price) : ""}\n`); }
+  if (o.foot) t += `\n${o.foot}`;
+  const ta = $("#txtFallback");
+  navigator.clipboard.writeText(t).then(() => { toast("Menu copied"); ta.hidden = true; }).catch(() => { ta.hidden = false; ta.value = t; ta.select(); toast("Select the text below and copy it"); });
+};
+
+/* ---------- downloads ---------- */
+let downloads = null;
+async function saveFile(name, data) {
+  if (!downloads && standalone) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: "text/csv" }));
+    a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000); return;
+  }
+  if (!downloads) { toast("Downloads aren't available in this view."); return; }
+  try { await downloads.save({ filename: name, data }); toast("Saved " + name); }
+  catch (e) { if (e?.code !== "declined") toast("Could not save the file."); }
+}
+
+/* ---------- misc ---------- */
+let toastT; function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+function errMsg(e, base = "That didn't save.") {
+  if (e?.code === "invalid_argument") return base + " You may have view-only access to this register.";
+  if (e?.code === "quota_exceeded") return base + " Storage is full. Delete old orders.";
+  return base + " Check your connection and try again.";
+}
+
+/* ---------- boot ---------- */
+let unsubs = [];
+function subscribeAll() {
+  unsubs.forEach(u => u && u()); unsubs = [];
+  unsubs.push(Store.watch("menu", null, rows => { S.items = rows; renderRegister(); renderMenu(); renderGenCats(); if (S.tab === "generator") drawMenu(); }));
+  unsubs.push(Store.watch("config", null, rows => { const m = rows.find(r => r.id === "main"); if (m) S.cfg = { ...S.cfg, ...m }; delete S.cfg.id; applyCfg(); fillCfg(); renderRegister(); renderMenu(); if (S.tab === "generator") drawMenu(); }));
+  unsubs.push(Store.watch("orders", ["day", dayKey()], rows => { S.todayOrders = rows; if (S.salesDay === dayKey()) { S.orders = rows; renderSales(); } renderTicket(); }));
+}
+if (standalone) {
+  $("#printOpts").hidden = false;
+  $("#autoPrint").checked = prefs.auto; $("#kitchenCopy").checked = prefs.kitchen;
+  const savePrefs = () => { prefs.auto = $("#autoPrint").checked; prefs.kitchen = $("#kitchenCopy").checked; try { localStorage.setItem("labanita:print", JSON.stringify(prefs)); } catch {} };
+  $("#autoPrint").onchange = savePrefs; $("#kitchenCopy").onchange = savePrefs;
+}
+function setSync(on, txt) { $("#syncDot").classList.toggle("on", on); $("#syncTxt").textContent = txt; }
+
+applyCfg(); fillCfg(); renderRegister(); renderMenu(); renderSales();
+try { const t = localStorage.getItem("labanita:tab"); if (t && $("#v-" + t)) showTab(t); } catch {}
+
+(async () => {
+  let db = null;
+  try {
+    if (window.claude?.use) {
+      [db, downloads] = await Promise.all([window.claude.use("db"), window.claude.use("downloads")]);
+    }
+  } catch {}
+  if (db) { Store.setDb(db); setSync(true, "Synced"); }
+  else if (standalone) setSync(true, "Saved on this PC");
+  else { setSync(false, "This device"); $("#localBanner").hidden = false; }
+  $("#pngBtn").hidden = !downloads && !standalone; $("#csvBtn").hidden = !downloads && !standalone;
+  subscribeAll(); watchSales();
+  // First run on the cashier PC: start with LABANITA's menu instead of an empty register.
+  if (standalone && !S.items.length) { try { if (!localStorage.getItem("labanita:seeded")) { localStorage.setItem("labanita:seeded", "1"); loadSample(); } } catch {} }
+})();
+// midnight rollover: re-subscribe to the new day's orders
+let lastDay = dayKey(); setInterval(() => { if (dayKey() !== lastDay) { lastDay = dayKey(); if (S.salesDay !== lastDay) { S.salesDay = lastDay; $("#salesDay").value = lastDay; } subscribeAll(); watchSales(); } }, 60000);
+})();
+</script>
